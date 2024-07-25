@@ -44,11 +44,6 @@ async function startEdgeDriverService() {
     });
 }
 
-async function takeScreenshot(driver, filename) {
-    let screenshot = await driver.takeScreenshot();
-    fs.writeFileSync(filename, screenshot, 'base64');
-}
-
 async function automateShopifyCheckout() {
     let edgeProcess;
     let driver;
@@ -151,7 +146,7 @@ async function automateShopifyCheckout() {
         console.log('Entered zip code');
 
         // // Add a short wait to ensure any async validation processes are completed
-        await driver.sleep(2000);
+        // await driver.sleep(2000);
 
         // // Check for any visible error messages related to the zip code
         // let zipError = await driver.findElements(By.css('.field--error[data-field="shipping_address[zip]"]'));
@@ -169,27 +164,22 @@ async function automateShopifyCheckout() {
         await driver.wait(until.elementIsVisible(payButton), 30000);
         await driver.wait(until.elementIsEnabled(payButton), 30000);
 
-        await driver.executeScript("arguments[0].click();", payButton);
-        console.log('Clicked on pay button');
 
         let currentUrl = await driver.getCurrentUrl();
         console.log('Current URL after completing the order:', currentUrl);
 
+        await driver.sleep(4000);
+        await driver.executeScript("arguments[0].click();", payButton);
+        console.log('Clicked on pay button');
+
+
         // Wait for the thank-you page to load
         console.log('Waiting for the thank-you page');
-
-        await driver.sleep(2000);
-        await driver.executeScript("arguments[0].click();", payButton);
-        console.log('Clicked on pay button again');
-
         await driver.wait(until.urlContains('/thank-you'), 120000); // Increased timeout
 
         console.log('Order placed successfully');
     } catch (error) {
         console.error('Error during automation:', error);
-        if (driver) {
-            await takeScreenshot(driver, 'error_screenshot.png');
-        }
     } finally {
         if (driver) {
             await driver.quit();
